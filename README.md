@@ -7,7 +7,7 @@ templated repository for building non-custodial desktop wallet in python on top 
 1.  [requirements](#requirements)
 2.  [application capabilities](#application-capabilities)
 3.  [readme](https://github.com/XRPLF/xrpl-dev-portal/blob/master/content/tutorials/build-apps/build-a-desktop-wallet-in-python.md)
-
+4.  [learning portal](https://xrpl.org/build-a-desktop-wallet-in-python.html)
 -   [notes](#notes)
 
 
