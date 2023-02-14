@@ -3,13 +3,18 @@
 **contents**
 
 1.  [brief](#brief)
-2.  [description](#description)
-3.  [script](#script)
-4.  [background](#background)
+2.  [output](#output)
+3.  [description](#description)
+4.  [script](#script)
+5.  [background](#background)
 
 # brief
 
 the following scirpt will display a single window that returns a formatted string stating the latest validated ledger index on the xrp ledger testnet the init will instantiate the TWaXLFrame class and define a self.client variable as a JSON-RPC client using the method .JsonRpcClient(url) member method from the xrpl-py library.  this method connects to a public testnet server "https://s.altnet.rippletest.net:51234/" using the ledger method to get this data meanwhile it creates a wx.Frame subclass as the base of the user interface this class makes a window the user can see with a wx.StaticText widget to display text to the user and a wx.Panel to maintain that widget.
+
+# output
+
+![ui-twaxlframe](https://user-images.githubusercontent.com/65584733/218774838-9b521a28-2252-4abc-b417-4096ede32775.png)
 
 # description
 
