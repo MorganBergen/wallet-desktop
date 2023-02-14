@@ -12,9 +12,6 @@ templated repository for building non-custodial desktop wallet in python on top 
 6.  [00-main](#00-main)
 -   [notes](#notes)
 
-![Uploading Screenshot 2023-02-13 at 9.51.53 PM.png…]()
-
-
 ## requirements
 
 1.  `xrpl-py==1.3.0`
