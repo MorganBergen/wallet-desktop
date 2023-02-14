@@ -14,7 +14,8 @@ the following scirpt will display a single window that returns a formatted strin
 
 # output
 
-![ui-twaxlframe](https://user-images.githubusercontent.com/65584733/218774838-9b521a28-2252-4abc-b417-4096ede32775.png)
+![ui](https://user-images.githubusercontent.com/65584733/218776766-78d3ae0f-cc0d-4757-9983-b7c0ec3d533d.png)
+
 
 # description
 
