@@ -11,6 +11,8 @@ templated repository for building non-custodial desktop wallet in python on top 
 5.  [dependencies](#dependencies)
 -   [notes](#notes)
 
+![Uploading Screenshot 2023-02-13 at 9.51.53 PM.png…]()
+
 
 ## requirements
 
