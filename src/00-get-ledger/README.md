@@ -1,4 +1,5 @@
-# latest validated ledger index with TWaXL
+# latest validated ledger with [`JsonRpcClient()`](https://xrpl-py.readthedocs.io/en/stable/source/xrpl.clients.html#xrpl.clients.JsonRpcClient)  
+
 
 **contents**
 
@@ -10,7 +11,8 @@
 
 # brief
 
-the following scirpt will display a single window that returns a formatted string stating the latest validated ledger index on the xrp ledger testnet the init will instantiate the TWaXLFrame class and define a self.client variable as a JSON-RPC client using the method .JsonRpcClient(url) member method from the xrpl-py library.  this method connects to a public testnet server "https://s.altnet.rippletest.net:51234/" using the ledger method to get this data meanwhile it creates a wx.Frame subclass as the base of the user interface this class makes a window the user can see with a wx.StaticText widget to display text to the user and a wx.Panel to maintain that widget.
+the following scirpt will display a single window that returns a formatted string stating the latest validated ledger index on the xrp ledger testnet the init will instantiate the TWaXLFrame class and define a self.client variable as a JSON-RPC client using the method .JsonRpcClient(url) member method from the xrpl-py library.  this method connects to a public testnet server "https://s.altnet.rippletest.net:51234/" (note that if you click on this link right now you will recieve an erro stating undefined object, meaning it can only be accessed default class construction.  the connection using the ledger method will get this data and meanwhile it creates a wx.Frame subclass as the base of the user interface this class makes a window the user can see with a wx.StaticText widget to display text to the user and a wx.Panel to maintain that widget.
+
 
 # output
 
@@ -37,7 +39,13 @@ this is the constructor for the TWaXLFrame class, it is called when the object i
 
 5.  `wx.Frame.__init__(self, None, title="TWaXL", size=wx.size(400, 400))`
 
-`wx.Frame` is the base class for all top-level windows, it is the parent class of all other window classes.  the title will populate at the top of the window 
+`wx.Frame` is the base class for all top-level windows, it is the parent class of all other window classes.  the title will populate at the top of the window.
+
+6.  `self.client = xrpl.clients.JsonRpcClient(url)`
+
+this declaraction creates a new instance of the `JsonRpcClient` class which is used to send `JSON-RPC` requests to the xrp ledger server at the specified `url`.  in classic pythonic programming `self` keyword refers to the instance of the class that the method `JsonRpcClient()` method is being called on.  by creating this instance of the `JsonRpcClient` class, you are grated access to send requests to the xrp ledger server.  this is a `sync` meaning syncronous client for interacting the rippled `JSON RPC` the request returns the response.
+
+`@param     url str literal = https://s.altnet.rippletest.net:51234/`
 
 
 

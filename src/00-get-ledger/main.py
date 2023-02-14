@@ -19,7 +19,7 @@ import wx
 class TWaXLFrame(wx.Frame):
 
     def __init__(self, url):
-        wx.Frame.__init__(self, None, title="TWaXL", size=wx.Size(400, 400))
+        wx.Frame.__init__(self, None, title="morgan's xrp ledger validated index viewer", size=wx.Size(400, 200))
         self.client = xrpl.clients.JsonRpcClient(url)
 
         main_panel = wx.Panel(self)
@@ -27,15 +27,22 @@ class TWaXLFrame(wx.Frame):
 
     def get_validated_ledger(self):
         try:
+            response = self.client.request(xrpl.models.requests.Ledger(ledger_index="validated"))
 
         except Exception as e:
+            return f"Failed to get validated ledger from server. ({e})"
+
+        if response.is_successful():
+            return f"\n\n\t\tLatest validated ledger index: {response.result['ledger_index']}"
+        else:
+            return f"Server returned an error:  {response.result['error_message']}"
 
 
 if __name__ == "__main__":
     JSON_RPC_URL = "https://s.altnet.rippletest.net:51234/"
     app = wx.App()
     frame = TWaXLFrame(JSON_RPC_URL)
-    frame.show()
+    frame.Show()
     app.MainLoop()
 
 
