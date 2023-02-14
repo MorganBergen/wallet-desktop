@@ -21,8 +21,27 @@ the `JsonRpcClient()` protocol is used for this software application to interact
 
 ![ui](https://user-images.githubusercontent.com/65584733/218776766-78d3ae0f-cc0d-4757-9983-b7c0ec3d533d.png)
 
+**request format for ledger index data**
 
-# description
+```python
+{
+    "method": "ledger",
+    "params": [
+        {
+            "ledger_index": "validated",
+            "accounts": false,
+            "full": false,
+            "transactions": false,
+            "expand": false,
+            "owner_funds": false
+        }
+    ]
+}
+```
+
+the ledger index of the ledger to use is a 32-bit unsigned integer used ot identify the ledger and is also known as the ledger's sequence number.
+
+# description of code
 
 1.  `import xrpl`
 
@@ -74,26 +93,65 @@ the `try` block will attempt to execute the code within the block, if an excepti
 the `self.client` is an instance of the `JsonRpcClient` class, which is used to interact with the xrp ledger using the JSON-PRC protocol.
 
 
+-  `self.client.request()`  the request method of the `JsonRpcClient` class is used to send the `JSON-RPC` requests to the XRP ledger server and recieve responses.
 
--  `self.client.request()`
+-  `xrpl.models.requests.Ledger`  the specific request being sent is an instance of the `xrpl.models.requests.Ledger` class which requests information about a specific ledger on the XRP Ledger network.
 
--  `xrpl.models.requests.Ledger`
+-  `Ledger(ledger_index="validated")`  the `ledger_index` parameter is set to `validated` which insinuates that the request is specifically for the latest validated ledger on the network. 
 
--  `Ledger(ledger_index="validated")`
+-  `response`  finally the `=` assignment operates instantiates the return value of the `self.client.request(xrpl.models.requests.Ledger(ledger_index="validated"))` call.  this variable contains the main information returned by the server and the content of the response will be contingent on the specific request being made, however it will typically be returned in `JSON` format and will have to be parsed and processed in some way by calling the program.
 
--  `response`
+12.  `except Exception as e`
 
+the `except` block will be executed if an exception is raised in the `try` block.  the `Exception` class is the base class for all built-in exceptions, it is the base class for all exceptions that are not explicitly handled by the `except` block.  the `as` keyword is used to bind the exception to a variable, in this case `e`.  want to learn more about exceptions in python?  check out this [link](https://morganbergen.notion.site/exceptions-691ce799ff384a77bbf8c924c1ad25c3) and run it in your program to see expectations on output.
+
+13.  `return f"Failed to get validated ledger from server. ({e})"`
+
+if an exception is caught then the TWaXLFrame container will have the string indicated that the validated ledger from the server could not be reached.  `e` in this case will be the error message
+
+14  `if response.is_successful():`
+
+the `is_successful()` method is a method of the `xrpl.models.requests.Ledger` class, it is used to determine if the request was successful.  if the request was successful then the `if` block will be executed.
+
+15.  `return f"\n\n\t\tLatest validated ledger index: {response.result['ledger_index']}"`
+
+the `response.result` is a dictionary that contains the response from the server, the `ledger_index` key will contain the latest validated ledger index.
+
+16.  `else:`
+
+if the `if` block was not executed then the `else` block will be executed.
+
+17.  `return f"Server returned an error:  {response.result['error_message']}"`
+
+18.  `if __name__ == "__main__":`
+
+the `if __name__ == "__main__":` block is used to execute the `main()` function when the program is run.  the `__name__` variable is a built-in variable that is set to the name of the module.  if the module is being run directly by the interpreter, the `__name__` variable will be set to the string literal `__main__`.  if the module is being imported from another module, the `__name__` variable will be set to the name of the module.
+
+19.  `JSON_RPC_URL = "https://s.altnet.rippletest.net:51234/"`
+
+the `JSON_RPC_URL` variable is a string literal that contains the url for the xrp ledger server.
+
+20.  `app = wx.App()`
+
+the `wx.App()` class is the main application object.  it is used to initialize the wxPython application, and create the top-level window.  it is the first object that should be created when using wxPython.  the `app` variable is an instance of the `wx.App()` class.
+
+21.  `frame = TWaXLFrame(JSON_RPC_URL)`
+
+the `frame` variable is an instance of the `TWaXLFrame` class, it is the main window of the application.
+
+22.  `frame.Show()`
+
+the `Show()` method is a method of the `wx.Frame` class, it is used to show the frame on the screen.
+
+23.  `app.MainLoop()`
+
+the `MainLoop()` method is a method of the `wx.App` class, it is used to start the main event loop.  the main event loop is the main loop of the application, it is used to process events and dispatch them to the appropriate event handlers.  the main event loop is started by calling `MainLoop()` and is terminated by calling `ExitMainLoop()`.
 
 # background
 
 1.  transaction reference
 
 a transaction is the only way to cause changes in the xrp ledger.  transaction outcomes are only [final](https://xrpl.org/finality-of-results.html) if signed, submitted, and accepted into the validated ledger version following the consensus process.  some ledger rules also generate [pseudo-transactions](https://xrpl.org/pseudo-transaction-types.html), these are never submitted or signed, however they are required to be accepted by the network consensus protocol.  transactions that fail are also included in ledger becaus ethey modify balances of the xrp to pay for the ani-spam transaction cost.
-
-2.  transaction types
-
-
-
 
 2.  pseudo-transactions
 
