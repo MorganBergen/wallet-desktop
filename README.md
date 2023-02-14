@@ -2,6 +2,8 @@
 
 templated repository for building non-custodial desktop wallet in python on top of the xrp ledger, by utilizing the xrpl library.  the application will allow for users to see updates on the xrp ledger, view ledger activities, see accounts reserve requirements, send direct xrp payments and provide feedback about the intended destination address.  in addition to learning the implementation of these features, this repository will also contain a graphical user interface, threading, and asynchronous `async` code in python.
 
+[mac os building ontop of ripplenet instructions](https://github.com/XRPLF/rippled/blob/5834fbbc5d5f7354f2ba4e8426391f8ff112c744/Builds/macos/README.md)  in this case i will be utilizing homebrew as my package manager therefore no library configuration path necessary
+
 **contents**
 
 1.  [requirements](#requirements)
@@ -9,7 +11,7 @@ templated repository for building non-custodial desktop wallet in python on top 
 3.  [readme](https://github.com/XRPLF/xrpl-dev-portal/blob/master/content/tutorials/build-apps/build-a-desktop-wallet-in-python.md)
 4.  [learning portal](https://xrpl.org/build-a-desktop-wallet-in-python.html)
 5.  [dependencies](#dependencies)
-6.  [00-main](#00-main)
+6.  [latest validated ledger index app]()
 -   [notes](#notes)
 
 ## requirements
