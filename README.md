@@ -13,8 +13,9 @@ templated repository for building non-custodial desktop wallet in python on top 
 5.  [dependencies](#dependencies)
 6.  [notes](#notes)
 
-** apps projects **
-6.  [latest validated ledger index app](https://github.com/MorganBergen/wallet-desktop/tree/main/src/00-get-ledger)
+**apps projects**
+
+1.  [latest validated ledger index app](https://github.com/MorganBergen/wallet-desktop/tree/main/src/00-get-ledger)
 
 ## requirements
 
@@ -39,8 +40,6 @@ templated repository for building non-custodial desktop wallet in python on top 
 2.  `wxPython` a cross platform graphical toolkit
 3.  `requests` a library for making http requests
 
-
-
 ## notes
 
 1.  reserves
@@ -54,7 +53,3 @@ the xrp ledger applies _reserve requirements_, in xrp, to protect the shared glo
 - signing key:  `n9J1GJHtua77TBEzir3FvsgWX68xBFeC8os3s5TkCg97E1cwxKfH`
 - ledger:  `31E44F125EFFD7AA146407F9020A5D509E70C19DD05B7492D14ECAD9EE3EFED7`
 - unl: [vl.ripple.com](vl.ripple.com)
-
-2.  base reserve and owner reserve
-
-reserve requirements
