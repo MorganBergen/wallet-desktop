@@ -25,7 +25,8 @@ class TWaXLFrame(wx.Frame):
                 ledger_index="validated"
             ))
         except Exception as e:
-            return f"Failed to get validated ledger from server. ({e})"
+            
+            return (f"Failed to get validated ledger from server. ({e})")
 
         if response.is_successful():
             return f"Latest validated ledger: {response.result['ledger_index']}"
