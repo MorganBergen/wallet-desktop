@@ -6,6 +6,7 @@ templated repository for building non-custodial desktop wallet in python on top 
 
 **contents**
 
+0.  [app projects](#app-projects)
 1.  [requirements](#requirements)
 2.  [application capabilities](#application-capabilities)
 3.  [readme](https://github.com/XRPLF/xrpl-dev-portal/blob/master/content/tutorials/build-apps/build-a-desktop-wallet-in-python.md)
@@ -13,7 +14,7 @@ templated repository for building non-custodial desktop wallet in python on top 
 5.  [dependencies](#dependencies)
 6.  [notes](#notes)
 
-**apps projects**
+## app projects
 
 1.  [latest validated ledger index app](https://github.com/MorganBergen/wallet-desktop/tree/main/src/00-get-ledger)
 
