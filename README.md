@@ -17,6 +17,7 @@ templated repository for building non-custodial desktop wallet in python on top 
 ## app projects
 
 1.  [latest validated ledger index app](https://github.com/MorganBergen/wallet-desktop/tree/main/src/00-get-ledger)
+2.  [show ledger updates]()
 2.  show ledger updates - `02-threaded.py`
 
 ## requirements
