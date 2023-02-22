@@ -24,3 +24,47 @@ the main challenge with threads is that you have to be careful not to access dat
 
 to make full use of the ledger's ability to push messages to the client use xrpl-py's `AsyncWebsocketClient` and ❌ `JsonRpcClient`.  this lets you "subscribe" to updates using aynchronous code, while also performing other requests / response actions in response to various events such as user input.
 
+the following libraries must be imported into the current main module youre working in
+
+```python
+import asyncio
+from threading import Thread    
+```
+
+`import asyncio` is used to create a new event loop for the worker thread, and to run the `AsyncWebsocketClient` in the worker thread.  `from threading import Thread` is used to create a new thread for the worker thread.
+
+`from threading import Thread` is used to create a new thread for the worker thread.
+
+```python
+class XRPLMonitorThread(Thread):
+    '''
+    this will be the worker thread to watch for new ledger event updates and will be used to 
+    pass information back to the main frame to be shown in the user interface
+    using a thread let us maintain the gui responsiveness while doing work in the background
+    '''
+    
+    # default constructor to initialize url, gui, and event loop
+    def __init__(self, p_url, p_gui):
+        self.gui = p_gui
+        self.url = p_url
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+        self.loop.set_debug(True)
+
+    def run(self):
+        self.loop.run_forever()
+
+    async def watch_xrpl(self):
+        
+
+
+
+
+
+
+
+
+
+
+
+```
