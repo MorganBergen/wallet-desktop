@@ -16,7 +16,6 @@ the following scirpt will display a single window that returns a formatted strin
 
 the `JsonRpcClient()` protocol is used for this software application to interact with the xrp blockchain, either by reading blockchain data or by sending transactions to the network, and it be connected to an xrpl node. it will invoke a `RPCCall.cpp` module within the `XRPLF/rippled/src/ripple/net/impl/RPCCall.cpp` view [RPC client protcol here](https://github.com/XRPLF/rippled/blob/5834fbbc5d5f7354f2ba4e8426391f8ff112c744/src/ripple/net/impl/RPCCall.cpp)
 
-
 # output
 
 ![ui](https://user-images.githubusercontent.com/65584733/218776766-78d3ae0f-cc0d-4757-9983-b7c0ec3d533d.png)

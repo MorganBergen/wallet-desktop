@@ -4,6 +4,7 @@
 @author         morgan bergen
 @brief          the following scirpt will display a single window that returns a formatted string
                 stating the latest validated ledger index on the xrp ledger testnet
+
 @description    the init will instantiate the TWaXLFrame class and define a self.client variable
                 as a JSON-RPC client using the method .JsonRpcClient(url) member method
                 from the xrpl-py library.  this method connects to a public testnet server
@@ -39,6 +40,7 @@ class TWaXLFrame(wx.Frame):
 
 
 if __name__ == "__main__":
+    # json rpc client url is here
     JSON_RPC_URL = "https://s.altnet.rippletest.net:51234/"
     app = wx.App()
     frame = TWaXLFrame(JSON_RPC_URL)
