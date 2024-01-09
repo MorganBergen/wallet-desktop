@@ -28,7 +28,7 @@ the following libraries must be imported into the current main module youre work
 
 ```python
 import asyncio
-from threading import Thread    
+from threading import thread    
 ```
 
 `import asyncio` is used to create a new event loop for the worker thread, and to run the `AsyncWebsocketClient` in the worker thread.  `from threading import Thread` is used to create a new thread for the worker thread.
@@ -36,7 +36,7 @@ from threading import Thread
 `from threading import Thread` is used to create a new thread for the worker thread.
 
 ```python
-        class XRPLMonitorThread(Thread):
+class XRPLMonitorThread(Thread):
     """
     A worker thread to watch for new ledger events and pass the info back to
     the main frame to be shown in the UI. Using a thread lets us maintain the
