@@ -46,5 +46,3 @@ if __name__ == "__main__":
     frame = TWaXLFrame(JSON_RPC_URL)
     frame.Show()
     app.MainLoop()
-
-
