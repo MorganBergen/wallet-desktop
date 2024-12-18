@@ -1,57 +1,234 @@
-# wallet-desktop
+#  getting started using python library
 
-templated repository for building non-custodial desktop wallet in python on top of the xrp ledger, by utilizing the xrpl library.  the application will allow for users to see updates on the xrp ledger, view ledger activities, see accounts reserve requirements, send direct xrp payments and provide feedback about the intended destination address.  in addition to learning the implementation of these features, this repository will also contain a graphical user interface, threading, and asynchronous `async` code in python.  the end product will be a non-custodial wallet application that can check an account's balances, send XRP, and nitify when the account receives infomcing transactions.
+walks through the basics of building an xrp ledger connected application using [`xrpl-py`](https://github.com/XRPLF/xrpl-py), a pure python library to interact with the xrp ledger using native python models and methods.  this tutorial is intended for beginners and should take no longer than 30 minutes to complete.
 
-[mac os building ontop of ripplenet instructions](https://github.com/XRPLF/rippled/blob/5834fbbc5d5f7354f2ba4e8426391f8ff112c744/Builds/macos/README.md)  in this case i will be utilizing homebrew as my package manager therefore no library configuration path necessary
+####  learning goals
 
-**contents**
+basic building blocks of xrp ledger based applications
 
-0.  [app projects](#app-projects)
-1.  [requirements](#requirements)
-2.  [application capabilities](#application-capabilities)
-3.  [readme](https://github.com/XRPLF/xrpl-dev-portal/blob/master/content/tutorials/build-apps/build-a-desktop-wallet-in-python.md)
-4.  [learning portal](https://xrpl.org/build-a-desktop-wallet-in-python.html)
-5.  [dependencies](#dependencies)
-6.  [notes](#notes)
+how to connect to the xrp ledger using `xrpl-py`
 
-## app projects
+how to get an account on the [testnet](https://xrpl.org/resources/dev-tools/xrp-faucets) using `xrpl-py`
 
-1.  [latest validated ledger index app](https://github.com/MorganBergen/wallet-desktop/tree/main/src/00-get-ledger)
-2.  [show ledger updates](https://github.com/MorganBergen/wallet-desktop/tree/main/src/01-ledger-updates)
+how to use the `xrpl-py` library to look up information about an account on the xrp ledger
 
-## requirements
+how to put these steps together to create a python app
 
-1.  `xrpl-py==1.3.0`
-2.  `wxPython==4.1.1`
-3.  `toml==0.10.2`
-4.  `requests==2.25.1`
+####  requirements
 
-## application capabilities
+the `xrpl-py` library supports > python 3.7 and later
 
-1.  shows updates to the xrp ledger in real-time
-2.  can view any xrp ledger account's activities "read-only" including showing how much xrp was delivered by each transaction
-3.  shows how much xrp is set aside for the account's reserve requirement
-4.  can send direct xrp payments and provide feedback about the intended destination address, the feedback includes
-    - whether the intended destination already exists in the xrp ledger, or the payment would have to fund its creation
-    - if the address does not wan to recieve xrp `DisallowXRP` is set to `true` / it's flag is emabled
-    - if the address has a verified domain name associated with it
+####  installation
 
-## dependencies
+the `xrpl-py` cab be installed with `pip3 install xrpl-py`
 
-1.  `xrpl-py` a client library for the xrp ledger
-2.  `wxPython` a cross platform graphical toolkit
-3.  `requests` a library for making http requests
+####  start building
 
-## notes
+when you're working with the xrp ledger, there are a few things you'll need to manage, whether you're adding xrp to your account, integrating with the decentralized exchange, or issuing tokens.  this tutorial walks you through basic patterns common to getting started with all of these use cases and provides sample code for implementing them.  here are the basic steps you'll need to cover for almost any xrp ledger project
 
-1.  reserves
+[1.  connect to the xrp ledger](#1--connect-to-the-xrp-ledger)
+[2.  get an account](#2--get-an-account)
+[3.  query the xrp ledger](#3--query-the-xrp-ledger)
 
-the xrp ledger applies _reserve requirements_, in xrp, to protect the shared global ledger from growing excessively large as the result malicious usage.  the goal is to constrain the growth of the ledger to match improvements in technology so that a current commodity-level machine can always fit the current ledger in RAM.  in order to have an account, an address must hold a minimum amount of xrp in the shared global ledger.  to fund a new address, you must receive enough xrp at that address to meet the reserve requirement.  you cannot send the reserved xrp to others, but you can recover some of the xrp by deleting the account.  the reserve requirements change due to the fee voting process, where [validators](https://livenet.xrpl.org/network/validators)
+####  1.  connect to the xrp ledger
 
-**university of kansas validator / domain ripple.ittc.ku.edu**
+in order to make queries and submit transactions, you need to connect to the xrp ledger.  to do this with `xrpl-py`, use the [`xrpl.clients.module`](https://xrpl-py.readthedocs.io/en/latest/source/xrpl.clients.html)
 
-- master key:  `nHUVPzAmAmQ2QSc4oE1iLfsGi17qN2ado8PhxvgEkou76FLxAz7C`
-- version:  `1.9.4`
-- signing key:  `n9J1GJHtua77TBEzir3FvsgWX68xBFeC8os3s5TkCg97E1cwxKfH`
-- ledger:  `31E44F125EFFD7AA146407F9020A5D509E70C19DD05B7492D14ECAD9EE3EFED7`
-- unl: [vl.ripple.com](vl.ripple.com)
+
+```Python
+#  Define the network client
+from xrpl.clients import JsonRpcClient
+
+JSON_RPC_URL = "https://s.altnet.rippletest.net:51234/"
+
+client = JsonRpcClient(JSON_RPC_URL)
+```
+
+####  connect to the production xrp ledger
+
+the sample code previously shows how to connect to the testnet, which is a parallel network for testing where the money has no real value.  when you're ready to integrate with the production xrp ledger, you'll need to connect to the mainnet. 
+
+(option 1)  by installing the core server (`rippled`) and running a node yourself.  the core server connects to the mainnet by default, but you can change the configuration to use testnet or devnet.  there are good reasons to run your own core server.  if you run your own server you can connect to it as follows
+
+```Python
+from xrpl.clients import JsonRpcClient
+
+JSON_RPC_URL = "http://localhost:5005/"
+
+client = JsonRpcClient(JSON_RPC_URL)
+```
+
+(option 2)  by using one of the available public servers.
+
+```Python
+from xrpl.clients import JsonRpcClient
+
+JSON_RPC_URL = "https://s2.ripple.com:51234/"
+
+client = JsonRpcClient(JSON_RPC_URL)
+```
+
+####  2.  get an account
+
+to store value and execute transactions on the xrp ledger, you need an account:  a set of keys and an address that's been funded with enough xrp to meet account reserve.  the address is the identifier of your account and you use the private key to sign transactions that you submit to the xrp ledger.
+
+for testing and development purpose, you can use the xrp faucets to generate keys and fund the account on the testnet or devnet.  for production purposes, you should take care to store your keys and set up a secure signing method.  another difference in production is that xrp has real worth, so you can't get it for free from a faucet.  
+
+to create and fund an account on the testnet, `xrpl-py` provides the `generate_faucet_wallet` method
+
+```Python
+#  create a wallet using the testnet faucet
+#  https://xrpl.org/xrp-testnet-faucet.html
+
+from xrpl.wallet import generate_faucet_wallet
+
+test_wallet = generate_faucet_wallet(client, debug=True)
+
+print(test_wallet)
+
+'''
+print output
+
+public_key:: 022FA613294CD13FFEA759D0185007DBE763331910509EF8F1635B4F84FA08AEE3
+private_key:: -HIDDEN-
+classic_address: raaFKKmgf6CRZttTVABeTcsqzRQ51bNR6Q
+'''
+```
+
+####  using the account  
+
+in this tutorial we only query details about the generated account from the xrp ledger, but you can use the values in the `Wallet` instance to prepare, sign, and submit transactions with `xrpl-py`
+
+####  prepare 
+
+to prepare the transaction
+
+```Python
+#  prepare payment
+
+from xrpl.models.transactions import Payment
+
+from xrpl.utils import xrp_to_drops
+
+my_tx_payment = Payment(
+    account = test_account,
+    amount = xrp_to_drops(22),
+    destination = "rPT1Sjq2YGrBMTttX4GZHjKu9dyfzbpAYe",
+)
+```
+
+####  sign and submit
+
+to sign and submit the transaction
+
+```Python
+#  sign and submit the transaction
+
+from xrpl.transaction import submit_and_wait
+
+tx_response = submit_and_wait(my_tx_payment, client, test_wallet)
+```
+
+####  derive an x-address
+
+you can use `xrpl-py`'s `xrpl.core.addresscodec` module to derive an x-address from the `Wallet.address` field
+
+```Python
+#  derive an x-address from the classic address
+#  https://xrpaddress.info/
+
+from xrpl.core import addresscodec
+
+test_xaddress = addresscodec.classic_address_to_xaddress(test_account, tag = 12345, is_test_network = True)
+
+print("\nclassic address:\n\n", test_account)
+
+print("x-address:\n\n", test_xaddress)
+```
+
+the x-address format packs the address and destination tag into a more user friendly value
+
+####  3.  query the xrp ledger
+
+
+
+
+
+--------------------------------------------------
+
+
+####  development environment
+
+building and running application in a containerized environment.  
+a container is a standard unit of software that packages up code and 
+dependencies and runs them in an isolated environment.
+
+`docker init`
+
+```
+~/wallet-desktop
+❯ docker init
+
+Welcome to the Docker Init CLI!
+
+This utility will walk you through creating the following files with sensible defaults for your project:
+  - .dockerignore
+  - Dockerfile
+  - compose.yaml
+  - README.Docker.md
+
+Let's get started!
+
+? What application platform does your project use?  [Use arrows to move, type to filter]
+  Go - suitable for a Go server application
+> Python - suitable for a Python server application
+  Node - suitable for a Node server application
+  Rust - suitable for a Rust server application
+  ASP.NET Core - suitable for an ASP.NET Core application
+  PHP with Apache - suitable for a PHP web application
+  Java - suitable for a Java application that uses Maven and packages as an uber jar
+  Other - general purpose starting point for containerizing your application
+  Don't see something you need? Let us know!
+
+  ? What application platform does your project use? Python
+  ? What version of Python do you want to use? (3.10.11) 
+  ? What port do you want your app to listen on? 8000
+  ? What is the command you use to run your app (e.g., gunicorn 'myapp.example:app' --bind=0.0.0.0:8000)? python main.py
+
+✔ Created → .dockerignore
+✔ Created → Dockerfile
+✔ Created → compose.yaml
+✔ Created → README.Docker.md
+
+✔ Created → .dockerignore
+✔ Created → Dockerfile
+✔ Created → compose.yaml
+✔ Created → README.Docker.md
+
+→ Your Docker files are ready!
+  Review your Docker files and tailor them to your application.
+  Consult README.Docker.md for information about using the generated files.
+
+  What's next?
+    Start your application by running → docker compose up --build
+    Your application will be available at http://localhost:8000
+
+  Quit
+```
+
+docker file is a text document that contains all of the commands to assemble an image.  
+
+[`Dockerfile`](https://docs.docker.com/reference/dockerfile/)
+
+[`docker-compose.yml`](https://docs.docker.com/reference/compose-file/)
+
+[`README.Docker.md`](https://docs.docker.com/reference/compose-file/)
+
+`docker init`
+
+`docker-compose up --build`
+
+
+`docker ps`
+
+`docker exec -it <container_id_or_name> /bin/bash`
