@@ -1,71 +1,39 @@
-from xrpl.clients import JsonRpcClient
-from xrpl.wallet import generate_faucet_wallet, XRPLFaucetException
-from xrpl.models.transactions import Payment
-from xrpl.utils import xrp_to_drops
-from xrpl.transaction import submit_and_wait
-import traceback
-import logging
-from xrpl.wallet import Wallet
-import time
+#  gui and xrpl connection
+import xrpl
+import wx
+import asyncio
+from xrpl.asyncio.clients import AsyncWebsocketClient
+from xrpl.models.requests import Ledger
 
-# def fund_wallet_with_retries(client, max_retries=3):
-
-#  connect to the xrp ledger
-
-client = JsonRpcClient("https://s.altnet.rippletest.net:51234/")
-
-def main():
+class TWaXLFrame(wx.Frame):
     
-    #  configure logging
-    logging.basicConfig(level = logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-    logger = logging.getLogger(__name__)
+    def __init__(self, url):
+        wx.Frame.__init__(self, None, title="TWaXL", size = wx.Size(800, 400))
+        self.url = url
+        main_panel = wx.Panel(self)
+        self.ledger_info = wx.StaticText(main_panel, label = "fetching ledger info...")
 
-    try:
-        logger.info("starting the application")
+    async def get_validated_ledger(self):
+        async with AsyncWebsocketClient(self.url) as client:
+            try:
+                response = await client.request(Ledger(ledger_index="validated"))
 
+                if response.is_successful():
+                    return f"latest validated ledger: {response.result['ledger_index']}"
+                else:
+                    return f"server resulted in an error: {response.result['error_message']}"
 
-        #  generate a test wallet
-        logger.info("generating a test wallet")
-        test_wallet = Wallet.create()
-        logger.info(f"test wallet generated:")
-        logger.info(f"public key: {test_wallet.public_key}")
-        logger.info(f"private key: {test_wallet.private_key}")
-        logger.info(f"classic address: {test_wallet.classic_address}")
-
-        #  fund the test wallet
-        logger.info("funding the test wallet")
-        funded_wallet = generate_faucet_wallet(client, debug=True)
-
-    except XRPLFaucetException as e:
-        logger.error("failed to fund wallet using faucet")
-        logger.error(f"error: {e}")
-        traceback.print_exc()
-
-    except Exception as e:
-        logger.error(f"An error occurred: {e}")
-        traceback.print_exc()
+            except Exception as e:
+                return f"failed to get validated ledger from server. ({e})"
+            
+    async def update_ledger_info(self):
+        ledger_info = await self.get_validated_ledger()
+        wx.CallAfter(self.ledger_info.SetLabel, ledger_info)
 
 if __name__ == "__main__":
-    main()
-
-
-# #  prepare payment
-
-# my_tx_payment = Payment(
-#     account = test_wallet.classic_address,
-#     amount = xrp_to_drops(22),
-#     destination = "rPT1Sjq2YGrBMTttX4GZHjKu9dyfzbpAYe"
-# )
-
-# #  sign and submit the transaction 
-
-# tx_response = submit_and_wait(my_tx_payment, client, test_wallet) 
-
-'''
-❯ python main.py      
-Attempting to fund address r4Dw2Bb84KpcjxeNj5d9GGQEgu3Zq3rHYH
-Faucet fund successful.
-public_key: EDD0E5EC599F7E87A54C6BF50FC299CB7B9B6CE7E3C90A1827873B695526147BF1
-private_key: -HIDDEN-
-classic_address: r4Dw2Bb84KpcjxeNj5d9GGQEgu3Zq3rHYH
-'''
+    JSON_RPC_URL = "wss://s.altnet.rippletest.net:51233/"
+    app = wx.App()
+    frame = TWaXLFrame(JSON_RPC_URL)
+    frame.Show()
+    asyncio.run(frame.update_ledger_info())
+    app.MainLoop()

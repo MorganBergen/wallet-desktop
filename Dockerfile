@@ -30,9 +30,18 @@ RUN adduser \
     --uid "${UID}" \
     appuser
 
-#  install curl for testing internet connectivity
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
-
+#  install build-essential for compiling c code
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libgtk-3-dev \
+    pkg-config \
+    libjpeg-dev \
+    libtiff-dev \
+    libpng-dev \
+    zlib1g-dev \
+    libgl1-mesa-glx \
+    libgl1-mesa-dri
+    
 # Download dependencies as a separate step to take advantage of Docker's caching.
 # Leverage a cache mount to /root/.cache/pip to speed up subsequent builds.
 # Leverage a bind mount to requirements.txt to avoid having to copy them into

@@ -1,1 +1,4 @@
 xrpl-py
+wxPython
+requests
+toml
