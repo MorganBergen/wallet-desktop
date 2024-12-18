@@ -339,9 +339,193 @@ if you want to updates (for example, waiting to see when new transaction have be
 
 to make full use of the xrp ledger's ability to push messages to the client, use `xrpl-py`'s `AsyncWebsocketClient` instead of `JsonRpcClient`.  this lets you subscribe to updates using asynchronous routines, while also performing other request/response operations in response to various events such as user input.
 
+add these imports at the top of the file
+
+```Python
+import asyncio
+from threading import Thread
+```
+
+then, the code for the monitor thread is as follows (put this in the same file as the rest of the app)
+
+```Python
+
+class XRPLMonitorThread(Thread):
+  
+  '''
+  a worker thread to watch for new ledger events and pass the info back to 
+  the main frame to be shown in the ui.  using a thread lets us maintain the
+  responsiveness of the ui while doing work in the background
+  note for thread safety, this thread should treat self.gui as read only to 
+  modify the gui, use wx.CallAfter(...)
+  '''
+  def __init__(self, url, gui):
+    Thread.__init__(self, daemon=True)  
+    self.gui = gui
+    self.url = url
+    self.loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(self.loop)
+    self.loop.set_debug(True)
+
+  '''
+  this thread runs a never ending event loop that monitors messages 
+  coming from xrpl, sending them to the gui thread when necessary, and also
+  handles making requests to the xrpl when the gui prompts them
+  '''
+  def run(self):
+    self.loop.run_forever()
+
+  '''
+  this is the task that opens the connection to the xrpl, then handles incoming 
+  subscription messages by dispatching them to the appropriate part of the gui
+  '''
+  async def watch_xrpl(self):
+    async with xrpl.asyncio.clients.AsyncWebsocketClient(self.url) as self.client:
+      await self.on_connected()
+      async for message in self.client:
+        mtype = message.get("type")
+        if mtype == "ledgerClosed":
+          wx.CallAfter(self.gui.update_ledger, message)
+
+  '''
+  set up initial subscriptions and populate the gui with data from the ledger on 
+  startup.  requires that self.client be connected first
+  set up a subscription for the new ledger
+  the immediate response contains details for the last validated ledger
+  we can use this to fill in that area of the gui without waiting for a new ledger to close
+  '''
+  async def on_connected(self):
+    response = await self.client.request(xrpl.models.requests.Subscribe(
+      streams=["ledger"]
+    ))
+    wx.CallAfter(self.gui.update_ledger, response.result)
+```
+
+this code defines a `Thread` subclass for the worker.  when the thread starts, it sets up an event loop, which waits for async tasks to be created and run.  the code uses `asyncio` debug mode so that the console shows any errors that occur in the async tasks.
+
+the `watch_xrpl()` function is an example of such a task which the gui thread starts when its ready:
+it connects to the xrp ledger, then calls the subscribe method to be notified whenever a new ledger is validated.  it uses the immediate response and all later subscription stream messages to trigger updates of the gui.
+
+>  <p style="color:green"><code>tip</code></p>  
+> 
+>  define worker jobs like this usage `async def` instead of `def` so that
+>  you can use the `await` keyword in them; you need to use `await` to get the response
+>  to the `AsyncWebsocketClient.request()` method.  normally you would also need to use `await`
+>  or something similar to get the response from any function you define with `async def`, but 
+>  in this app, the `run_bg_job()` helper takes care of that in a different way
+
+update the code for the main thread and gui frame to look like this
+
+```Python
+
+class TWaXLFrame(wx.Frame):
+
+  def __init__(self, url):
+    wx.Frame.__init__(self, None, title="TWaXL", size=wx.Size(800, 400))
+    self.build_ui()
+    self.worker = XRPLMonitorThread(url, self)
+    self.worker.start()
+    self.run_bg_job(self.worker.watch_xrpl())
+  
+  def build_ui(self):
+    main_panel = wx.Panel(self)
+    self.ledger_info = wx.StaticText(main_panel, label="Not connected")
+    main_sizer = wx.BoxSizer(wx.VERTICAL)
+    main_sizer.Add(self.ledger_info, 1, flag=wx.EXPAND|wx.ALL, border=5)
+    main_panel.SetSizer(main_sizer)
+  
+  '''
+  schedules a job to run asynchronously in the xrpl worker thread
+  the job should be a future for example from calling an async function
+  '''
+  def run_bg_job(self, job):
+    task = asyncio.run_coroutine_threadsafe(job, self.worker.loop)
+
+  '''
+  process a ledger subscription message to update the ui with information about the latest validated ledger
+  '''
+  def update_ledger(self, message):
+    close_time_io = xrpl.utils.ripple_time_to_datetime(message["ledger_time"]).isoformat()
+    self.ledger_info.SetLabel(f"latest validated ledger:\n"
+                              f"ledger index: {message['ledger_index']}\n"
+                              f"ledger hash: {message['ledger_hash']}\n"
+                              f"close time: {close_time_iso}")
+
+```
+
+the part that build the gui has been moved to a separate method, `build_ui(self)`.  this helps to divide the code into chunks that are easier to understand, because the `__init__()` constructor has other work to do now, too:  it starts the worker thread, and give it its first job.  the gui setup also now uses a sizer to control placement of the text within the frame.
+
+>  <p style="color:green"><code>tip</code></p>  
+>
+>  in this tutorial, all the gui code is written by hand but you may find it easier to create
+>  powerful gui's using a build tool such as [`wxGlade`](https://wxglade.sourceforge.net) 
+>  separating the gui code from the constructor may make it easier to switch to this type of approach later
+
+there is a new helper method, `run_bg_job()`, which runs an asynchronous function (defined with `async def`) in the worker thread.  use this method any time you want the worker thread to interact with the xrp ledger network
+
+instead of a `get_validated_ledger()` method, the gui class now has an `update_ledger()` method, which takes an object in the format of a ledger stream message and displays some of that information to the user.  the worker thread calls this method using `wx.CallAfter()` whenever it gets a `ledgerClosed` event from the ledger.
+
+finally change the code to start the app (at the end of the file) slightly
+
+```Python
+if __name__ == "__main__":
+  WS_URL = "wss://s.altnet.rippletest.net:51233"
+  app = wx.App()
+  frame = TWaXLFrame(WS_URL)
+  frame.Show()
+  app.MainLoop()
+```
+
+since the app uses a websocket client instead of the json rpc client now, the code has to use a websocket url to connect
+
+>  <p style="color:green"><code>tip</code></p>  
+>
+>  if you run your own rippled server, you can connect to it using `wss://localhost:6006` as the url.  you can also use the websocket urls of public servers to connect to the mainnet or other networks.
+
+####  3.  display an account
+
+now that you have a working ongoing connection to the xrp ledger, it's time to start adding some "wallet" functionality that lets you manage an individual account.  for this step, you should prompt the user to input their address or master seed, then use that to display information about their account including how much xrp is set aside for the reserve requirement.
+
+the prompt is a [popup dialog](https://xrpl.org/assets/python-wallet-3-enter.e101d4b952280998e99e6a24d1bd5feb1cd56792b8a734f87f1fa1b63145d867.ac57e6ef.png). after the user inputs the prompt, the updated gui looks like [this](https://xrpl.org/assets/python-wallet-3-main.1536465b77a1719e4e30f4592b2c8cdee0d33dce3ca7308c9e9df9b8f8912da5.ac57e6ef.png)
+
+when you do math on xrp amounts, you should use the `Decimal` class so that you don't get rounding errors. add this to the top of the file with the other imports
+
+`from decimal import Decimal`
+
+in the `XRPLMonitorThread` class, rename and update the `watch_xrpl()` method as follows
+
+```Python
+'''
+this is thge task that opens the connection to the xrpl, then handles incoming subscription messages
+by dispatching them to the appropriate part of the gui
+'''
+async def watch_xrpl_account(self, address, wallet=None):
+  self.account = address
+  self.wallet = wallet
+
+  async with xrpl.asyncio.clients.AsyncWebsocketClient(self.url) as self.client:
+    await self.on_connect()
+    async for message in self.client:
+      mtype = message.get("type")
+      if mtype == "ledgerClosed":
+        wx.CallAfter(self.gui.update_ledger, message)
+      elif mtype == "transaction":
+        response = await self.client.request(xrpl.models.requests.AccountInfo(
+          account = self.account,
+          ledger_index = message["ledger_index"]
+        ))
+        wx.CallAfter(self.gui.update_account, response.result["account_data"])
+```
 
 
+text displayed in the gui is
 
+```
+latest validated ledger: 
+ledger index: ######
+ledger hash: XXXXXXXXXXXXXXXXXXXXXXXXXXXX
+close time: 2024-12-18T16:00:00.000000Z
+```
 
 ####  development environment
 
@@ -462,6 +646,7 @@ non-network local connections being added to access control list
 
 authorization for docker to connect to the x server
 
+make sure to download and install `XQuartz` from https://www.xquartz.org
 
 #  run commands
 
@@ -470,3 +655,4 @@ authorization for docker to connect to the x server
 `docker-compose up --build`
 
 `xhost +local:docker`
+
