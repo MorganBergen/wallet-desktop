@@ -667,9 +667,9 @@ chnage the font weight of the static text to bold
 >
 
 
->  <p style="font-weight: bold"><code>code</code></p>
->  <p style="font-weight: bold; color:orange"><code>code</code></p>
->  <p style="font-weight: bold; color:green"><code>code</code></p>
+<p style="font-weight: bold"><code>code</code></p>
+<p style="font-weight: bold; color:orange"><code>code</code></p>
+<p style="font-weight: bold; color:green"><code>code</code></p>
 
 
 
