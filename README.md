@@ -517,15 +517,163 @@ async def watch_xrpl_account(self, address, wallet=None):
         wx.CallAfter(self.gui.update_account, response.result["account_data"])
 ```
 
+the newly renamed `watch_xrpl_account()` method now takes an address and optional wallet and saves them for later.  the gui thread provides these based on user input.  this method also adds a new case for transaction stream messages.  when it sees a new transaction, the worker does not yet do anything with the transaction itself, but it uses that as a trigger to get the account's latest xrp balance and other info using the `account_info` method.  when that response arrives, the worker passes the account data to the gui for display.
 
-text displayed in the gui is
+still the `XRPLMonitorThread` class, update the `on_connected()` method as follows
+
+```Python
+'''
+set up initial subscriptions and populate the gui with data from the ledger on startup
+requires that self.client be connected first
+'''
+async def on_connected(self):
+  
+  '''
+  set up 2 subscriptions - 
+  all new ledgers and any new transactions that affect the chosen account
+  '''
+  response = await self.client.request(xrpl.models.requests.Subscribe(
+    streams=["ledger"],
+    accounts=[self.account]
+  ))
+
+  '''
+  the immediate response contains details for the last validated ledger
+  we can use this to fill in that area of the gui without waiting for a new ledger to close
+  '''
+  wx.CallAfter(self.gui.update_ledger, response.result)
+
+  '''
+  get starting values for account info
+  '''
+  response = await self.client.request(xrpl.models.requests.AccountInfo(
+    account = self.account,
+    ledger_index = "validated"
+  ))
+  
+  '''
+  this most often happens if the account in question doesn't exist on the network we're connected to
+  better handling would be to use wx.CallAfter to display an error dialog in the gui and possibly
+  allow the user to try inputting a different account
+  '''
+  if not response.is_successful():
+    print("got error from server:", response)
+    exit(1)
+  
+  wx.CallAfter(self.gui.update_account, response.result["account_data"])
+```
+
+the `on_connected()` method now subscribes to transactions for the provided account and the ledger stream too.  furthermore, it now calls `account_info` on startup, and passes the response to the gui for display.
+
+the new gui has a lot more fields that need to be laid out in two dimensions.  the following subclass of `wx.GridBagSizer` provides a quick way to do so, setting the appropriate padding and sizing values for a two dimensional list of widgets.  add this code to the same file:
+
+```Python
+'''
+helper class for adding a bunch of items uniformly to a gridbagsizer
+'''
+class AutoGridBagSizer(wx.GridBagSizer):
+
+  def __init__(self, parent):
+    wx.GridBagSizer.__init__(self, vgap = 5, hgap = 5)
+    self.parent = parent
+
+  '''
+  given a two dimensional iterable `ctrls`, add all the items in a grid top to bottom, left to right
+  with each inner iterable being a row.  set the total number of columns based on the longest iterable
+  '''
+  def BulkAdd(self, ctrls):
+    flags = wx.EXPAND|wx.ALL|wx.RESERVE_SPACE_EVEN_IF_HIDDEN|wx.ALIGN_CENTER_VERTICAL
+    for x, row in enumerate(ctrls):
+      for y, ctrl in enumerate(row):
+        self.Add(ctrl, (x, y), flag = flags, border = 5)
+    
+    self.parent.SetSizer(self)
 
 ```
-latest validated ledger: 
-ledger index: ######
-ledger hash: XXXXXXXXXXXXXXXXXXXXXXXXXXXX
-close time: 2024-12-18T16:00:00.000000Z
+
+update the `TWaXLFrame` constructor as follows
+
+```Python
+def __init__(self, url, test_network = True):
+  
+  wx.Frame.__init__(self, None, title = "TWaXL", size = wx.Size(800, 400))
+
+  self.test_network = test_network
+
+  #  the leger's current reserve setting, to be filled later
+  self.reserve_base = None
+  self.reserve_inc = None
+
+  self.build_ui()
+
+  #  pop up to ask user for their account -------------------------
+  address, wallet = self.prompt_for_account()                      
+                                                                   
+  #  start background thread for update from the ledger -----------
+  self.worker = XRPLMonitorThread(url, self)
+  self.worker.start()
+  self.run_bg_job(self.worker.watch_xrpl_account(address, wallet))
+
 ```
+
+now the constructor takes a boolean to indicate whether it's connecting to a test network.  if you provide a mainnet url, you should also pass `False`.  it uses this to encode and decode x-address and warn if they're intended for a different network.  it also calls a new method, `prompt_for_account()` to get an address and wallet, and passes those to the renamed `watch_xrpl_account()` background job.
+
+update the `build_ui()` method definition as follows
+
+```Python
+'''
+called during __init__ to set up all the gui components
+'''
+
+    def build_ui(self):
+        '''
+        Called during __init__ to set up all the GUI components.
+        '''
+        main_panel = wx.Panel(self)
+
+        self.acct_info_area = wx.StaticBox(main_panel, label="Account Info")
+
+        lbl_address = wx.StaticText(self.acct_info_area, label="Classic Address:")
+        self.st_classic_address = wx.StaticText(self.acct_info_area, label="TBD")
+        lbl_xaddress = wx.StaticText(self.acct_info_area, label="X-Address:")
+        self.st_x_address = wx.StaticText(self.acct_info_area, label="TBD")
+        lbl_xrp_bal = wx.StaticText(self.acct_info_area, label="XRP Balance:")
+        self.st_xrp_balance = wx.StaticText(self.acct_info_area, label="TBD")
+        lbl_reserve = wx.StaticText(self.acct_info_area, label="XRP Reserved:")
+        self.st_reserve = wx.StaticText(self.acct_info_area, label="TBD")
+
+        aia_sizer = AutoGridBagSizer(self.acct_info_area)
+        aia_sizer.BulkAdd( ((lbl_address, self.st_classic_address),
+                           (lbl_xaddress, self.st_x_address),
+                           (lbl_xrp_bal, self.st_xrp_balance),
+                           (lbl_reserve, self.st_reserve)) )
+
+        self.ledger_info = wx.StaticText(main_panel, label="Not connected")
+
+        main_sizer = wx.BoxSizer(wx.VERTICAL)
+        main_sizer.Add(self.acct_info_area, 1, flag=wx.EXPAND|wx.ALL, border=5)
+        main_sizer.Add(self.ledger_info, 1, flag=wx.EXPAND|wx.ALL, border=5)
+        main_panel.SetSizer(main_sizer)
+```
+
+this adds a `wx.StaticBox` with several new widgets, then uses the `AutoGridBagSizer` (defined above) to lay them out in 2x4 grid within the box.  these new widgets are all static text to display details of the account, through some of them start with placeholder text.  since they require data from the ledger, you have to wait for the worker thread to send that data back.
+
+chnage the font weight of the static text to bold
+
+>   <p style="font-weight: bold; color:orange">⚠️</p>
+>   <p style="font-weight: bold; color:orange">WARNING</p>
+>
+>  change the font weight of the static text to bold
+>
+
+
+>  <p style="font-weight: bold"><code>code</code></p>
+>  <p style="font-weight: bold; color:orange"><code>code</code></p>
+>  <p style="font-weight: bold; color:green"><code>code</code></p>
+
+
+
+
 
 ####  development environment
 
